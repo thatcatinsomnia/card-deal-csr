@@ -1,5 +1,5 @@
 <template>
-  <div class="card" :style="{ left: index * 12 + 'px' }">
+  <div class="card" ref="card">
     <img
       :src="require(`@/assets/images/${card.suit}/${card.number}.png`)"
       :alt="card.suit + ' ' + card.number"
@@ -12,7 +12,8 @@ export default {
   props: ["card", "index"],
   data() {
     return {};
-  }
+  },
+  mounted() {}
 };
 </script>
 
@@ -20,6 +21,22 @@ export default {
 .card {
   width: 5rem;
   position: absolute;
+
+  @for $i from 1 to 53 {
+    &:nth-of-type(#{$i}) {
+      left: (#{($i - 1) * 0.8rem});
+    }
+  }
+
+  @include respond(tab-port) {
+    width: 3.5rem;
+
+    @for $i from 1 to 53 {
+      &:nth-of-type(#{$i}) {
+        left: (#{($i - 1) * 0.5rem});
+      }
+    }
+  }
 
   img {
     display: block;

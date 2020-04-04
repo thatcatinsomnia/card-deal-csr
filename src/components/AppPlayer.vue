@@ -45,6 +45,10 @@ export default {
   height: 8rem;
   position: relative;
 
+  @include respond(small-phone) {
+    flex: 0 0 100%;
+  }
+
   &__name {
     font-size: 1.2rem;
     color: rgb(218, 191, 41);

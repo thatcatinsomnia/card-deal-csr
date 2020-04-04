@@ -145,6 +145,12 @@ export default {
   box-sizing: border-box;
 }
 
+html {
+  @include respond(tab-land) {
+    font-size: 75%;
+  }
+}
+
 body {
   background: rgb(24, 145, 98);
 }
@@ -154,26 +160,49 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+
+  @include respond(tab-port) {
+    padding: 2rem;
+  }
 }
 
 .desktop {
   padding: 0 4rem;
   flex: 1;
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
+
+  @include respond(tab-port) {
+    padding: 0;
+  }
 }
 
 .system {
   display: flex;
   justify-content: space-around;
+  flex-wrap: wrap;
   width: 80%;
+
+  @include respond(tab-land) {
+    width: 100%;
+  }
+}
+
+.rule {
+  @include respond(tab-port) {
+    flex: 0 0 100%;
+    margin-bottom: 2rem;
+  }
 }
 
 .deck-container {
   padding: 2rem 4rem;
-  display: flex;
-  height: 10rem;
+  min-height: 10rem;
+
+  @include respond(tab-port) {
+    padding: 2rem 0;
+    min-height: 8rem;
+  }
 }
 
 .header {
@@ -182,6 +211,10 @@ body {
 }
 
 .cta {
+  @include respond(tab-port) {
+    flex: 0 0 100%;
+  }
+
   &__button {
     padding: 0.5em 2em;
     font-size: 1.2rem;
@@ -192,6 +225,10 @@ body {
 
     &:not(:last-of-type) {
       margin-right: 2rem;
+
+      @include respond(phone) {
+        margin-right: 0.5rem;
+      }
     }
 
     &:hover {
