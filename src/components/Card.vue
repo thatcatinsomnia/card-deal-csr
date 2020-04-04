@@ -12,8 +12,7 @@ export default {
   props: ["card", "index"],
   data() {
     return {};
-  },
-  mounted() {}
+  }
 };
 </script>
 

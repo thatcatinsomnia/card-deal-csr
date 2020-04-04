@@ -2,7 +2,7 @@
   <div class="player">
     <h1 class="player__name">player {{ id }}</h1>
     <div class="player__cards">
-      <transition-group name="card-anim">
+      <transition-group name="deal-card" @enter="enter" :css="false">
         <Card
           v-for="(card, index) in deck"
           :key="'player-' + card.suit + card.number"
@@ -17,20 +17,40 @@
 
 <script>
 import Card from "@/components/Card";
+import gsap from "gsap";
 
 export default {
-  props: ["playerDeck", "id"],
+  props: ["playerDeck", "id", "cardPositionX", "cardPositionY"],
   components: {
     Card
   },
   data() {
     return {
-      deck: []
+      deck: [],
+      dealCardStart: null
     };
   },
   watch: {
     playerDeck(newValue) {
       this.deck = newValue;
+    }
+  },
+  methods: {
+    enter(el, done) {
+      let { left, top } = el.getBoundingClientRect();
+      let positionX = left - this.cardPositionX;
+      let positionY = top - this.cardPositionY;
+
+      gsap
+        .fromTo(
+          el,
+          { x: -positionX, y: -positionY },
+          { x: 0, y: 0, duration: 0.2 }
+        )
+        .then(done);
+    },
+    updatePosition() {
+      console.log("position update");
     }
   },
   mounted() {
@@ -55,14 +75,13 @@ export default {
   }
 }
 
-.card-anim-enter-active,
-.card-anim-leave-active {
-  transition: transform 0.1s cubic-bezier(0, 0, 0.3, 1);
-}
+// .deal-card {
+//   animation: deal-animate 1s ease-out;
+// }
 
-.card-anim-enter,
-.card-anim-leave-to {
-  opacity: 0;
-  transform: translateY(-0.8rem);
+@keyframes dealAnimate {
+  to {
+    transform: translate(0);
+  }
 }
 </style>

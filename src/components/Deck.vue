@@ -1,6 +1,6 @@
 <template>
   <div class="deck">
-    <transition-group name="shuffle" mode="out-in">
+    <transition-group name="shuffle" mode="out-in" @before-leave="leave">
       <Card
         v-for="(card, index) in deck"
         :index="index"
@@ -46,6 +46,11 @@ export default {
           this.deck.push({ suit, number });
         }
       }
+    },
+    leave(el) {
+      console.log("leave");
+      const { top, left } = el.getBoundingClientRect();
+      this.$emit("onUpdatePosition", { x: left, y: top });
     }
   },
   watch: {

@@ -35,6 +35,7 @@
             @onResetDeck="resetRule"
             :deck="deck"
             :isReset="isReset"
+            @onUpdatePosition="updatePosition"
           ></Deck>
         </div>
       </div>
@@ -44,6 +45,8 @@
           :key="'player-' + index"
           :id="index"
           :playerDeck="players[index].deck"
+          :cardPositionX="dealCardPositionX"
+          :cardPositionY="dealCardPositionY"
         >
         </app-player>
       </div>
@@ -70,7 +73,10 @@ export default {
       players: [{ id: 0, deck: [] }],
       deck: [],
       isGameStart: false,
-      isReset: false
+      isReset: false,
+
+      dealCardPositionX: 0,
+      dealCardPositionY: 0
     };
   },
   watch: {
@@ -131,6 +137,11 @@ export default {
       this.players = [{ id: 0, deck: [] }];
       this.isGameStart = false;
       this.isReset = false;
+    },
+    updatePosition(position) {
+      // update the deal card position for calculate animation
+      this.dealCardPositionX = position.x;
+      this.dealCardPositionY = position.y;
     }
   }
 };
