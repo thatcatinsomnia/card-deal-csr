@@ -36,18 +36,17 @@ export default {
       this.deck = newValue;
     },
     isDeckEmpty() {
-      this.$refs.card.forEach((card, index) => {
+      this.$refs.card.forEach(card => {
         gsap
           .to(card.$el, {
             rotate: 0,
             duration: 0.3,
-            clearProps: "transform"
+            clearProps: "transform,left"
           })
           .then(() => {
-            gsap.to(card.$el, {
-              left: index * 8,
-              duration: 0.5,
-              clearProps: "all"
+            gsap.from(card.$el, {
+              left: 0,
+              duration: 0.3
             });
           });
       });
@@ -55,7 +54,6 @@ export default {
   },
   methods: {
     enter(el) {
-      console.log("in enter");
       let { left, top } = el.getBoundingClientRect();
       let positionX = left - this.cardPositionX;
       let positionY = top - this.cardPositionY;

@@ -51,6 +51,13 @@
         >
         </app-player>
       </div>
+
+      <footer class="footer">
+        Copyright &copy; 2020 Shen. All rights reserved
+        <a href="https://github.com/thatcatinsomnia/card-deal-csr">
+          github link
+        </a>
+      </footer>
     </div>
   </div>
 </template>
@@ -262,5 +269,10 @@ body {
     background: rgb(224, 224, 224);
     color: rgb(189, 189, 189);
   }
+}
+
+.footer {
+  color: #fff;
+  text-align: center;
 }
 </style>
