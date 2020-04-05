@@ -37,8 +37,19 @@ export default {
     },
     isDeckEmpty() {
       this.$refs.card.forEach((card, index) => {
-        gsap.to(card.$el, { x: 0, y: 0, rotate: 0, duration: 0.5 });
-        gsap.to(card.$el, { x: 0, left: index * 12 });
+        gsap
+          .to(card.$el, {
+            rotate: 0,
+            duration: 0.3,
+            clearProps: "transform"
+          })
+          .then(() => {
+            gsap.to(card.$el, {
+              left: index * 8,
+              duration: 0.5,
+              clearProps: "all"
+            });
+          });
       });
     }
   },
