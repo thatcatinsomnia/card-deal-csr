@@ -36,6 +36,9 @@ export default {
       this.deck = newValue;
     },
     isDeckEmpty() {
+      // sort deck first
+
+      //animattion
       this.$refs.card.forEach(card => {
         gsap
           .to(card.$el, {
@@ -49,6 +52,13 @@ export default {
               duration: 0.3
             });
           });
+      });
+      this.deck.sort((a, b) => {
+        if (a.index > b.index) {
+          return 1;
+        } else {
+          return -1;
+        }
       });
     }
   },

@@ -41,9 +41,11 @@ export default {
   },
   methods: {
     generateDeck() {
+      let i = 0;
       for (let suit of this.suits) {
         for (let number of this.numbers) {
-          this.deck.push({ suit, number });
+          this.deck.push({ suit, number, index: i });
+          i++;
         }
       }
     },

@@ -13,6 +13,7 @@
               class="cta__button cta__button--shuffle"
               @click="shuffleDeck"
               :class="{ disabled: isGameStart }"
+              :disabled="isGameStart"
             >
               洗牌
             </button>
@@ -45,6 +46,7 @@
           :key="'player-' + index"
           :id="index"
           :isDeckEmpty="isDeckEmpty"
+          :isReset="isReset"
           :playerDeck="players[index].deck"
           :cardPositionX="dealCardPositionX"
           :cardPositionY="dealCardPositionY"
@@ -123,6 +125,12 @@ export default {
       let currentPlayerIndex = 0;
 
       for (let i = this.deck.length; i > 0; i--) {
+        // break the loop when user click the reset button
+        // this means game is paused
+        if (!this.isGameStart) {
+          break;
+        }
+
         this.players[currentPlayerIndex].deck.push(this.deck.shift());
 
         currentPlayerIndex++;
@@ -141,12 +149,12 @@ export default {
     reset() {
       this.deck = [];
       this.isReset = true;
+      this.isGameStart = false;
     },
     resetRule() {
       this.isDeckEmpty = false;
       this.playersCount = 1;
       this.players = [{ id: 0, deck: [] }];
-      this.isGameStart = false;
       this.isReset = false;
     },
     updatePosition(position) {
