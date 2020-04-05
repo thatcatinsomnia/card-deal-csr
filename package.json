@@ -10,7 +10,6 @@
 	"dependencies": {
 		"core-js": "^3.6.4",
 		"gsap": "^3.2.6",
-		"velocity-animate": "^2.0.5",
 		"vue": "^2.6.11"
 	},
 	"devDependencies": {

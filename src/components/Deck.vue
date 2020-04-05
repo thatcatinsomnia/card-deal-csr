@@ -48,7 +48,6 @@ export default {
       }
     },
     leave(el) {
-      console.log("leave");
       const { top, left } = el.getBoundingClientRect();
       this.$emit("onUpdatePosition", { x: left, y: top });
     }

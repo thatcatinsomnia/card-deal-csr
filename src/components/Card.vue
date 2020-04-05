@@ -1,5 +1,5 @@
 <template>
-  <div class="card" ref="card">
+  <div class="card">
     <img
       :src="require(`@/assets/images/${card.suit}/${card.number}.png`)"
       :alt="card.suit + ' ' + card.number"

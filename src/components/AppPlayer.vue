@@ -2,12 +2,13 @@
   <div class="player">
     <h1 class="player__name">player {{ id }}</h1>
     <div class="player__cards">
-      <transition-group name="deal-card" @enter="enter" :css="false">
+      <transition-group name="deal-card" @enter="enter">
         <Card
           v-for="(card, index) in deck"
           :key="'player-' + card.suit + card.number"
           :index="index"
           :card="card"
+          ref="card"
         >
         </Card>
       </transition-group>
@@ -20,7 +21,7 @@ import Card from "@/components/Card";
 import gsap from "gsap";
 
 export default {
-  props: ["playerDeck", "id", "cardPositionX", "cardPositionY"],
+  props: ["playerDeck", "id", "cardPositionX", "cardPositionY", "isDeckEmpty"],
   components: {
     Card
   },
@@ -33,24 +34,38 @@ export default {
   watch: {
     playerDeck(newValue) {
       this.deck = newValue;
+    },
+    isDeckEmpty() {
+      this.$refs.card.forEach((card, index) => {
+        gsap.to(card.$el, { x: 0, y: 0, rotate: 0, duration: 0.5 });
+        gsap.to(card.$el, { x: 0, left: index * 12 });
+      });
     }
   },
   methods: {
-    enter(el, done) {
+    enter(el) {
+      console.log("in enter");
       let { left, top } = el.getBoundingClientRect();
       let positionX = left - this.cardPositionX;
       let positionY = top - this.cardPositionY;
 
-      gsap
+      var timeline = gsap.timeline();
+      timeline
         .fromTo(
           el,
           { x: -positionX, y: -positionY },
-          { x: 0, y: 0, duration: 0.2 }
+          { x: 0, y: 0, left: 0, duration: 0.2 }
         )
-        .then(done);
+        .to(el, {
+          rotation: this.generateRotation(),
+          x: Math.floor(Math.random() * 30),
+          y: Math.floor(Math.random() * 30),
+          duration: 0.1,
+          delay: -0.1
+        });
     },
-    updatePosition() {
-      console.log("position update");
+    generateRotation() {
+      return Math.floor(Math.random() * 360) + 7;
     }
   },
   mounted() {

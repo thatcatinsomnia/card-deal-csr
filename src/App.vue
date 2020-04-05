@@ -44,6 +44,7 @@
           v-for="(count, index) in playersCount"
           :key="'player-' + index"
           :id="index"
+          :isDeckEmpty="isDeckEmpty"
           :playerDeck="players[index].deck"
           :cardPositionX="dealCardPositionX"
           :cardPositionY="dealCardPositionY"
@@ -72,6 +73,7 @@ export default {
       playersCount: 1,
       players: [{ id: 0, deck: [] }],
       deck: [],
+      isDeckEmpty: false,
       isGameStart: false,
       isReset: false,
 
@@ -124,6 +126,7 @@ export default {
 
         await sleep(100);
       }
+      this.isDeckEmpty = true;
     },
     updateDeck(deck) {
       this.deck = deck;
@@ -133,6 +136,7 @@ export default {
       this.isReset = true;
     },
     resetRule() {
+      this.isDeckEmpty = false;
       this.playersCount = 1;
       this.players = [{ id: 0, deck: [] }];
       this.isGameStart = false;
