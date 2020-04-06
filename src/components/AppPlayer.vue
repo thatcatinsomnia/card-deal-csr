@@ -36,8 +36,6 @@ export default {
       this.deck = newValue;
     },
     isDeckEmpty() {
-      // sort deck first
-
       //animattion
       this.$refs.card.forEach(card => {
         gsap
@@ -54,8 +52,17 @@ export default {
           });
       });
       this.deck.sort((a, b) => {
-        if (a.index > b.index) {
+        let pointA = (a.index + 1) % 13 === 0 ? 13 : (a.index + 1) % 13;
+        let pointB = (b.index + 1) % 13 === 0 ? 13 : (b.index + 1) % 13;
+
+        if (pointA > pointB) {
           return 1;
+        } else if (pointA === pointB) {
+          if (a.index + 1 > b.index + 1) {
+            return 1;
+          } else {
+            return -1;
+          }
         } else {
           return -1;
         }
