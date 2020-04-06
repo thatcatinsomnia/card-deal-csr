@@ -141,7 +141,14 @@ export default {
 
         await sleep(100);
       }
-      this.isDeckEmpty = true;
+
+      // only empty the deck when game is start
+      // when user click reset reset button, the deck will empty by the restResult function.
+      // if empty deck early, the watch in deck will trigger the animate in AppPlayer,
+      // this break the deal card function
+      if (this.isGameStart) {
+        this.isDeckEmpty = true;
+      }
     },
     updateDeck(deck) {
       this.deck = deck;
