@@ -21,7 +21,7 @@ export default {
   props: ["deck", "isReset"],
   data() {
     return {
-      suits: ["clubs", "diamonds", "hearts", "spades"],
+      suits: ["club", "diamond", "heart", "spade"],
       numbers: [
         "A",
         "2",

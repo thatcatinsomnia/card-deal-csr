@@ -47,7 +47,11 @@ export default {
           .then(() => {
             gsap.from(card.$el, {
               left: 0,
-              duration: 0.3
+              duration: 0.3,
+              onComplete: () => {
+                card.$el.children[0].classList.remove("card-initial");
+                card.$el.children[0].classList.add("card-start");
+              }
             });
           });
       });
