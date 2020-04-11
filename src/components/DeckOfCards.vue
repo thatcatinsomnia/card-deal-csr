@@ -1,11 +1,12 @@
 <template>
   <div class="deck">
-    <transition-group name="shuffle" mode="out-in" @before-leave="leave">
+    <transition-group name="shuffle" @before-leave="beforeLeave">
       <Card
-        v-for="(card, index) in deck"
-        :index="index"
+        v-for="card in deck"
         :key="'initial-' + card.suit + card.number"
         :card="card"
+        :isStack="true"
+        :showBackSide="true"
       ></Card>
     </transition-group>
   </div>
@@ -13,12 +14,14 @@
 
 <script>
 import Card from "@/components/Card";
+import { eventBus } from "@/main";
 
 export default {
+  name: "DeckOfCard",
   components: {
     Card
   },
-  props: ["deck", "isReset"],
+  props: ["deck", "isGameOver"],
   data() {
     return {
       suits: ["club", "diamond", "heart", "spade"],
@@ -49,19 +52,19 @@ export default {
         }
       }
     },
-    leave(el) {
+    beforeLeave(el) {
       const { top, left } = el.getBoundingClientRect();
-      this.$emit("onUpdatePosition", { x: left, y: top });
+      eventBus.$emit("cardLocationFromDeck", { x: left, y: top });
     }
   },
   watch: {
     deck() {
-      this.$emit("onGenerateDeck", this.deck);
+      this.$emit("updateDeck", this.deck);
     },
-    isReset(newValue) {
-      if (newValue === true) {
+    isGameOver(isGameOver) {
+      if (isGameOver === true) {
         this.generateDeck();
-        this.$emit("onResetDeck", this.deck);
+        this.$emit("reset", this.deck);
       }
     }
   },
@@ -78,6 +81,6 @@ export default {
 }
 
 .shuffle-move {
-  transition: transform 0.2s;
+  transition: transform 0.2s ease-out;
 }
 </style>

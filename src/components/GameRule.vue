@@ -21,7 +21,8 @@
 
 <script>
 export default {
-  props: ["isGameStart", "isReset"],
+  name: "GameRule",
+  props: ["isGameStart", "isGameOver"],
   data() {
     return {
       playersChoice: [1, 2, 4],
@@ -29,11 +30,11 @@ export default {
     };
   },
   watch: {
-    playersCount(newValue) {
-      this.$emit("onUpdatePlayersCount", newValue);
+    playersCount(count) {
+      this.$emit("updatePlayersCount", count);
     },
-    isReset(newValue) {
-      if (newValue) {
+    isGameOver(isGameOver) {
+      if (isGameOver) {
         this.playersCount = 1;
       }
     }
@@ -45,6 +46,11 @@ export default {
 .rule {
   display: flex;
   align-items: center;
+
+  @include respond(tab-port) {
+    flex: 0 0 100%;
+    margin-bottom: 2rem;
+  }
 
   &__label {
     cursor: pointer;

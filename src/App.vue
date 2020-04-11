@@ -1,57 +1,48 @@
 <template>
   <div id="app">
+    <notifications position="center" classes="notifications" />
     <div class="container">
-      <div class="header">
-        <div class="system">
-          <app-rule
-            @onUpdatePlayersCount="updatePlayersCount"
-            :isGameStart="isGameStart"
-            :isReset="isReset"
-          ></app-rule>
-          <div class="cta">
-            <button
-              class="cta__button cta__button--shuffle"
-              @click="shuffleDeck"
-              :class="{ disabled: isGameStart }"
-              :disabled="isGameStart"
-            >
-              洗牌
-            </button>
-            <button
-              class="cta__button cta__button--deal"
-              @click="dealCard"
-              :class="{ disabled: isGameStart }"
-              :disabled="isGameStart"
-            >
-              發牌
-            </button>
-            <button class="cta__button cta__button--reset" @click="reset">
-              重新
-            </button>
-          </div>
-        </div>
-        <div class="deck-container">
-          <Deck
-            @onGenerateDeck="updateDeck"
-            @onResetDeck="resetRule"
-            :deck="deck"
-            :isReset="isReset"
-            @onUpdatePosition="updatePosition"
-          ></Deck>
-        </div>
+      <div class="system">
+        <GameRule
+          @updatePlayersCount="playersCount = $event"
+          :isGameStart="isGameStart"
+          :isGameOver="isGameOver"
+        >
+        </GameRule>
+
+        <CallToAction
+          @shuffleDeck="shuffleDeck"
+          @dealAllCards="dealAllCards"
+          @resetGame="resetGame"
+          :isGameStart="isGameStart"
+        ></CallToAction>
       </div>
-      <div class="desktop">
-        <app-player
+
+      <div class="deck-container">
+        <DeckOfCards
+          @updateDeck="updateDeck"
+          @reset="reset"
+          :deck="deck"
+          :isGameOver="isGameOver"
+        ></DeckOfCards>
+
+        <CardPool
+          :currentRound="currentRound"
+          :playersCount="playersCount"
+        ></CardPool>
+      </div>
+
+      <div class="desktop" :class="'desktop--' + playersCount">
+        <GamePlayer
           v-for="(count, index) in playersCount"
           :key="'player-' + index"
           :id="index"
-          :isDeckEmpty="isDeckEmpty"
-          :isReset="isReset"
           :playerDeck="players[index].deck"
-          :cardPositionX="dealCardPositionX"
-          :cardPositionY="dealCardPositionY"
+          :isAllCardDeal="isAllCardDeal"
+          :currentRoundPlayed="currentRoundPlayed"
+          @playCard="playCard"
         >
-        </app-player>
+        </GamePlayer>
       </div>
 
       <footer class="footer">
@@ -65,48 +56,54 @@
 </template>
 
 <script>
-import AppRule from "@/components/AppRule";
-import AppPlayer from "@/components/AppPlayer";
-import Deck from "@/components/Deck";
+import GameRule from "@/components/GameRule";
+import CallToAction from "@/components/CallToAction";
+import DeckOfCards from "@/components/DeckOfCards";
+import GamePlayer from "@/components/GamePlayer";
+import CardPool from "@/components/CardPool";
 import sleep from "@/utils/sleep";
 
 export default {
   name: "App",
   components: {
-    AppRule,
-    AppPlayer,
-    Deck
+    GameRule,
+    CallToAction,
+    DeckOfCards,
+    GamePlayer,
+    CardPool
   },
   data() {
     return {
       playersCount: 1,
       players: [{ id: 0, deck: [] }],
+      rounds: [],
+      currentRound: [],
+      currentRoundPlayed: [],
       deck: [],
-      isDeckEmpty: false,
+      isAllCardDeal: false,
       isGameStart: false,
-      isReset: false,
-
-      dealCardPositionX: 0,
-      dealCardPositionY: 0
+      isGameOver: false
     };
   },
   watch: {
     playersCount(count) {
       this.players.length = count;
 
-      // set each player id and  empty deck
+      // set each player id and empty deck
       for (let i = 0; i < this.players.length; i++) {
         this.players[i] = {
           id: i,
           deck: []
         };
       }
+    },
+    currentRound(round) {
+      if (round.length === this.playersCount) {
+        this.checkWinner();
+      }
     }
   },
   methods: {
-    updatePlayersCount(value) {
-      this.playersCount = value;
-    },
     shuffleDeck() {
       // Yates Shuffle
       // start from the end, pick random position
@@ -120,12 +117,13 @@ export default {
         this.$set(this.deck, randomIndex, temp);
       }
     },
-    async dealCard() {
+    async dealAllCards() {
       this.isGameStart = true;
       let currentPlayerIndex = 0;
 
       for (let i = this.deck.length; i > 0; i--) {
         // break the loop when user click the reset button
+        // this.isGameStart will be set to false if user click the reset button
         // this means game is paused
         if (!this.isGameStart) {
           break;
@@ -144,30 +142,88 @@ export default {
 
       // only empty the deck when game is start
       // when user click reset reset button, the deck will empty by the restResult function.
-      // if empty deck early, the watch in deck will trigger the animate in AppPlayer,
+      // if empty deck early, the watch in deck will trigger the animate in GamePlayer,
       // this break the deal card function
       if (this.isGameStart) {
-        this.isDeckEmpty = true;
+        this.isAllCardDeal = true;
       }
     },
     updateDeck(deck) {
       this.deck = deck;
     },
-    reset() {
+    playCard(card) {
+      this.currentRoundPlayed.push(card.player);
+      this.currentRound.push(card);
+      this.rounds.push(card);
+    },
+    checkWinner() {
+      const winnerIndex = this.findWinner(this.currentRound);
+
+      this.$notify({
+        title: `player ${this.currentRound[winnerIndex].player} win this round.`,
+        type: "success",
+        duration: 3000
+      });
+
+      setTimeout(() => {
+        this.currentRoundPlayed = [];
+        this.currentRound = [];
+      }, 3000);
+    },
+    findWinner(round) {
+      // transform card suit to calculate point
+      const suitsPoint = { club: 1, diamond: 2, heart: 3, spade: 4 };
+
+      let maxCardNumber = 0;
+      let maxCardSuit = "";
+      let maxPlayerIndex = -1;
+
+      round.forEach((player, index) => {
+        // transform card number to calculate point
+        const numberPoint = this.calculateCardPoint(player.index);
+
+        // first compare the card number
+        if (numberPoint > maxCardNumber) {
+          maxCardNumber = numberPoint;
+          maxCardSuit = player.suit;
+          maxPlayerIndex = index;
+
+          // if card number is equal, compare the suit
+        } else if (numberPoint === maxCardNumber) {
+          if (suitsPoint[player.suit] > suitsPoint[maxCardSuit]) {
+            maxCardSuit = player.suit;
+            maxPlayerIndex = index;
+          }
+        }
+      });
+
+      return maxPlayerIndex;
+    },
+    calculateCardPoint(cardIndex) {
+      // +1 because card index start from 0,
+      // J Q K will transform to 11 12 13
+      // A will transform to 99
+      // 2 is the smallest card, so can't do anything with it
+      let cardPoint = (cardIndex + 1) % 13 === 0 ? 13 : (cardIndex + 1) % 13;
+
+      // if card is A, set it to 99 point, means A is the largest card.
+      if (parseInt(cardPoint) === 1) {
+        return 99;
+      }
+      return cardPoint;
+    },
+    resetGame() {
       this.deck = [];
-      this.isReset = true;
+      this.isGameOver = true;
       this.isGameStart = false;
     },
-    resetRule() {
-      this.isDeckEmpty = false;
+    reset() {
+      this.isAllCardDeal = false;
       this.playersCount = 1;
       this.players = [{ id: 0, deck: [] }];
-      this.isReset = false;
-    },
-    updatePosition(position) {
-      // update the deal card position for calculate animation
-      this.dealCardPositionX = position.x;
-      this.dealCardPositionY = position.y;
+      this.rounds = [];
+      this.currentRound = [];
+      this.isGameOver = false;
     }
   }
 };
@@ -192,8 +248,23 @@ body {
   background: rgb(24, 145, 98);
 }
 
+.notifications {
+  padding: 1.5rem 3rem;
+  margin: 0.5rem;
+  text-align: center;
+  box-shadow: 0 0 0.6rem rgba(0, 0, 0, 0.3);
+  color: #fff;
+  border-radius: 4px;
+
+  .notification-title {
+    text-align: center;
+  }
+  &.success {
+    background: rgb(75, 187, 135);
+  }
+}
 .container {
-  padding: 4rem;
+  padding: 2rem 4rem;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -204,17 +275,32 @@ body {
 }
 
 .desktop {
-  padding: 0 4rem;
+  padding: 0 2rem;
   flex: 1;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-areas: "player0 player0 player0 player0";
+  align-items: center;
+  justify-items: center;
+  gap: 4rem;
 
   @include respond(tab-port) {
     padding: 0;
   }
+
+  &.desktop--2 {
+    grid-template-areas: "player0 player0 player1 player1";
+  }
+
+  &.desktop--4 {
+    grid-template-areas:
+      "player0 player0 player1 player1"
+      "player2 player2 player3 player3";
+  }
 }
 
 .system {
+  margin: 0 auto;
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
@@ -225,64 +311,13 @@ body {
   }
 }
 
-.rule {
-  @include respond(tab-port) {
-    flex: 0 0 100%;
-    margin-bottom: 2rem;
-  }
-}
-
 .deck-container {
   padding: 2rem 4rem;
-  min-height: 10rem;
+  height: 20vh;
 
   @include respond(tab-port) {
     padding: 2rem 0;
     min-height: 8rem;
-  }
-}
-
-.header {
-  display: flex;
-  flex-direction: column;
-}
-
-.cta {
-  @include respond(tab-port) {
-    flex: 0 0 100%;
-  }
-
-  &__button {
-    padding: 0.5em 2em;
-    font-size: 1.2rem;
-    cursor: pointer;
-    border-radius: 3px;
-    border: none;
-    outline: none;
-
-    &:not(:last-of-type) {
-      margin-right: 2rem;
-
-      @include respond(phone) {
-        margin-right: 0.5rem;
-      }
-    }
-
-    &:hover {
-      background: rgb(204, 185, 14);
-      color: #fff;
-    }
-  }
-}
-
-.disabled {
-  background: rgb(224, 224, 224);
-  color: rgb(189, 189, 189);
-  cursor: auto;
-
-  &:hover {
-    background: rgb(224, 224, 224);
-    color: rgb(189, 189, 189);
   }
 }
 
