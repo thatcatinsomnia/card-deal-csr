@@ -49,9 +49,10 @@ export default {
     },
     leave(el, done) {
       gsap.to(el, {
-        y: 600,
+        y: 400,
         rotate: gsap.utils.random(-90, 90),
-        duration: 1.5,
+        // how many time delay, decrease it to make all card disappear in the same time.
+        duration: 1 - el.dataset.index * 0.1,
         opacity: 0,
         delay: el.dataset.index * 0.1,
         onComplete: () => {
@@ -74,7 +75,7 @@ export default {
 .card-pool {
   margin: 0 auto;
   height: 100%;
-  width: 40%;
+  width: 30rem;
 
   &__inner {
     display: grid;
