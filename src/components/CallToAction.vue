@@ -16,7 +16,7 @@
     >
       發牌
     </button>
-    <button class="cta__button cta__button--reset" @click="resetGame">
+    <button class="cta__button cta__button--reset" @click="$emit('resetGame')">
       重新
     </button>
   </div>
@@ -25,13 +25,7 @@
 <script>
 export default {
   name: "CallToAction",
-  props: ["isGameStart"],
-  methods: {
-    resetGame() {
-      console.log("click");
-      this.$emit("resetGame");
-    }
-  }
+  props: ["isGameStart"]
 };
 </script>
 
