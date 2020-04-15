@@ -50,6 +50,7 @@ export default {
   @include respond(tab-port) {
     flex: 0 0 100%;
     margin-bottom: 2rem;
+    justify-content: center;
   }
 
   &__label {

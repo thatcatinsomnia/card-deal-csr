@@ -73,6 +73,10 @@ export default {
 
 <style lang="scss">
 .card-pool {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
   margin: 0 auto;
   height: 100%;
   width: 30rem;

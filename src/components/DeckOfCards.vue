@@ -1,6 +1,10 @@
 <template>
   <div class="deck">
-    <transition-group name="shuffle" @before-leave="beforeLeave">
+    <transition-group
+      class="deck__inner"
+      name="shuffle"
+      @before-leave="beforeLeave"
+    >
       <Card
         v-for="card in deck"
         :key="'initial-' + card.suit + card.number"
@@ -78,6 +82,20 @@ export default {
 .deck {
   position: relative;
   display: flex;
+  height: 15vh;
+
+  &__inner {
+    width: 50%;
+    height: 100%;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -30%);
+
+    @include respond(phone) {
+      left: 0%;
+      transform: translate(0, -30%);
+    }
+  }
 }
 
 .shuffle-move {

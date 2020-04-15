@@ -17,6 +17,13 @@
           :isGameStart="isGameStart"
         ></CallToAction>
       </div>
+      <div class="card-dealer">
+        <img
+          class="card-dealer__img"
+          :src="require('@/assets/images/girl.png')"
+          alt="casino girl"
+        />
+      </div>
 
       <div class="deck-container">
         <DeckOfCards
@@ -259,10 +266,12 @@ body {
   .notification-title {
     text-align: center;
   }
+
   &.success {
     background: rgb(75, 187, 135);
   }
 }
+
 .container {
   padding: 2rem 4rem;
   height: 100vh;
@@ -274,6 +283,18 @@ body {
   }
 }
 
+.card-dealer {
+  margin: 0 auto;
+  width: 25rem;
+
+  img {
+    pointer-events: none;
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
 .desktop {
   padding: 0 2rem;
   flex: 1;
@@ -282,7 +303,7 @@ body {
   grid-template-areas: "player0 player0 player0 player0";
   align-items: center;
   justify-items: center;
-  gap: 4rem;
+  row-gap: 2rem;
 
   @include respond(tab-port) {
     padding: 0;
@@ -312,8 +333,8 @@ body {
 }
 
 .deck-container {
-  padding: 2rem 4rem;
-  height: 20vh;
+  height: 10vh;
+  transform: translateY(-30%);
 
   @include respond(tab-port) {
     padding: 2rem 0;

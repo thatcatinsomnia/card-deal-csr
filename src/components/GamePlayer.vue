@@ -183,7 +183,7 @@ export default {
 .player {
   max-width: 30rem;
   width: 100%;
-  height: 15rem;
+  height: 10rem;
   position: relative;
   display: flex;
   flex-direction: column;
