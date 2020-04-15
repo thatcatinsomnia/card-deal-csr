@@ -6,7 +6,7 @@
       position: isStack ? 'absolute' : 'initial'
     }"
   >
-    <div class="card" :class="showBackSide ? 'showBackSide' : ''">
+    <div class="card" :class="showBackSide ? 'showBackSide' : 'card-start'">
       <div class="card__front">
         <img
           :src="
@@ -44,11 +44,16 @@ export default {
   },
   methods: {
     playCard(event) {
+      // console.log("play card");
       // check if card contains class: "card-start"
       // card-start class means all card is deal to player's hand
-      const card = event.target.closest(".card-start");
+      const card = event.target.closest(".card");
 
-      if (card) {
+      if (card && card.classList.contains("showBackSide")) {
+        return;
+      }
+
+      if (card && card.classList.contains("card-start")) {
         const { left, top } = card.getBoundingClientRect();
 
         this.$emit("playCard", {
@@ -76,6 +81,15 @@ export default {
   &:active .card.card-start {
     transition: transform 0.08s cubic-bezier(0, 0, 0.3, 1);
     transform: translateY(-1rem);
+  }
+
+  .card.showBackSide {
+    transform: rotateY(180deg);
+  }
+
+  &:hover .card.showBackSide,
+  &:active .card.showBackSide {
+    transform: rotateY(180deg);
   }
 
   @for $i from 1 to 53 {
@@ -122,13 +136,10 @@ export default {
   }
 
   img {
+    pointer-events: none;
     display: block;
     height: 100%;
     width: 100%;
   }
-}
-
-.showBackSide {
-  transform: rotateY(180deg);
 }
 </style>

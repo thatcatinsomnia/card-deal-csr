@@ -1,6 +1,18 @@
 <template>
   <div class="player" :class="'player--' + id">
-    <h1 class="player__name">player {{ id }}</h1>
+    <div class="player__header">
+      <span class="player__name">player {{ id }}</span>
+      <button
+        class="player__view"
+        @click="toggleView"
+        v-if="this.showBackSide === true"
+      >
+        <img :src="require('@/assets/icons/icon-view-hide.svg')" />
+      </button>
+      <button class="player__view" @click="toggleView" v-else>
+        <img :src="require('@/assets/icons/icon-view-show.svg')" />
+      </button>
+    </div>
     <div class="player__cards">
       <transition-group @enter="enter">
         <!-- 
@@ -13,7 +25,8 @@
           :key="'player-' + card.suit + card.number"
           :card="card"
           :isStack="true"
-          :showBackSide="true"
+          :showBackSide="showBackSide"
+          :data-owner="id"
           @playCard="playCard"
         >
         </Card>
@@ -26,6 +39,8 @@
 import { eventBus } from "@/main";
 import Card from "@/components/Card";
 import { gsap, Power4 } from "gsap";
+import "@/assets/icons/icon-view-hide.svg";
+import "@/assets/icons/icon-view-show.svg";
 
 export default {
   name: "GamePlayer",
@@ -36,6 +51,7 @@ export default {
   data() {
     return {
       deck: [],
+      showBackSide: true,
       positionX: 0,
       positionY: 0
     };
@@ -66,7 +82,6 @@ export default {
               duration: 0.3,
               onComplete: () => {
                 card.$el.children[0].classList.add("card-start");
-                card.$el.children[0].classList.remove("showBackSide");
               }
             });
           });
@@ -75,6 +90,9 @@ export default {
     }
   },
   methods: {
+    toggleView() {
+      this.showBackSide = !this.showBackSide;
+    },
     enter(el) {
       let { left, top } = el.getBoundingClientRect();
       let translateX = left - this.x;
@@ -128,6 +146,9 @@ export default {
       if (this.currentRoundPlayed.includes(this.id)) {
         return;
       }
+
+      this.showBackSide = true;
+
       this.playerDeck.forEach((playerCard, index) => {
         if (
           playerCard.suit === card.suit &&
@@ -183,9 +204,29 @@ export default {
     grid-area: player3;
   }
 
+  &__header {
+    display: flex;
+    align-items: center;
+  }
+
   &__name {
     font-size: 1.2rem;
+    margin: 0 1rem;
     color: rgb(218, 191, 41);
+  }
+
+  &__view {
+    padding: 0 0.2rem;
+    display: flex;
+    align-items: center;
+    border: none;
+    outline: none;
+    background: transparent;
+    cursor: pointer;
+
+    img {
+      pointer-events: none;
+    }
   }
 
   &__cards {
