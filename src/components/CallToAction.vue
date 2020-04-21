@@ -10,22 +10,32 @@
     </button>
     <button
       class="cta__button cta__button--deal"
-      @click="$emit('dealAllCards')"
+      @click="dealAllCards"
       :class="{ disabled: isGameStart }"
       :disabled="isGameStart"
     >
       發牌
     </button>
-    <button class="cta__button cta__button--reset" @click="$emit('resetGame')">
+    <button class="cta__button cta__button--reset" @click="resetGame">
       重新
     </button>
   </div>
 </template>
 
 <script>
+import { eventBus } from "@/main";
+
 export default {
   name: "CallToAction",
-  props: ["isGameStart"]
+  props: ["isGameStart"],
+  methods: {
+    dealAllCards() {
+      this.$emit("dealAllCards");
+    },
+    resetGame() {
+      eventBus.$emit("resetGame");
+    }
+  }
 };
 </script>
 
@@ -39,36 +49,31 @@ export default {
   }
 
   &__button {
-    padding: 0.5em 2em;
-    font-size: 1.2rem;
+    padding: 0.2em 1.3em;
+    font-size: 1rem;
     cursor: pointer;
-    border-radius: 3px;
-    border: none;
+    border: 1px solid #fff;
+    color: #fff;
     outline: none;
+    background: none;
 
     &:not(:last-of-type) {
-      margin-right: 2rem;
-
-      @include respond(phone) {
-        margin-right: 0.5rem;
-      }
+      margin-right: 1rem;
     }
 
     &:hover {
-      background: rgb(204, 185, 14);
+      background: $color-yellow;
       color: #fff;
     }
   }
 }
 
 .disabled {
-  background: rgb(224, 224, 224);
-  color: rgb(189, 189, 189);
+  opacity: 0.2;
   cursor: auto;
 
   &:hover {
-    background: rgb(224, 224, 224);
-    color: rgb(189, 189, 189);
+    background: none;
   }
 }
 </style>

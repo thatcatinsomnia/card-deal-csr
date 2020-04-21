@@ -1,22 +1,21 @@
 <template>
   <div id="app">
-    <notifications position="center" classes="notifications" />
-    <div class="container">
-      <div class="system">
-        <GameRule
-          @updatePlayersCount="playersCount = $event"
-          :isGameStart="isGameStart"
-          :isGameOver="isGameOver"
-        >
-        </GameRule>
+    <notifications position="center" :width="350" classes="notifications" />
+    <div class="system-bar">
+      <GameOptions
+        @updatePlayersCount="playersCount = $event"
+        :isGameStart="isGameStart"
+      >
+      </GameOptions>
 
-        <CallToAction
-          @shuffleDeck="shuffleDeck"
-          @dealAllCards="dealAllCards"
-          @resetGame="resetGame"
-          :isGameStart="isGameStart"
-        ></CallToAction>
-      </div>
+      <CallToAction
+        @shuffleDeck="shuffleDeck"
+        @dealAllCards="dealAllCards"
+        :isGameStart="isGameStart"
+      ></CallToAction>
+    </div>
+
+    <div class="container">
       <div class="card-dealer">
         <img
           class="card-dealer__img"
@@ -25,32 +24,22 @@
         />
       </div>
 
-      <div class="deck-container">
-        <DeckOfCards
-          @updateDeck="updateDeck"
-          @reset="reset"
-          :deck="deck"
-          :isGameOver="isGameOver"
-        ></DeckOfCards>
+      <Deck @updateDeck="updateDeck" :deck="deck"></Deck>
 
-        <CardPool
-          :currentRound="currentRound"
-          :playersCount="playersCount"
-        ></CardPool>
-      </div>
-
-      <div class="desktop" :class="'desktop--' + playersCount">
-        <GamePlayer
-          v-for="(count, index) in playersCount"
-          :key="'player-' + index"
-          :id="index"
-          :playerDeck="players[index].deck"
-          :isAllCardDeal="isAllCardDeal"
-          :currentRoundPlayed="currentRoundPlayed"
-          @playCard="playCard"
-        >
-        </GamePlayer>
-      </div>
+      <Player
+        v-for="(count, index) in playersCount"
+        :key="'player-' + index"
+        :id="index"
+        :playerDeck="players[index].deck"
+        :isDeckEmpty="isDeckEmpty"
+        :currentRoundPlayed="currentRoundPlayed"
+        @playCard="playCard"
+      >
+      </Player>
+      <Desktop
+        :currentRound="currentRound"
+        :playersCount="playersCount"
+      ></Desktop>
 
       <footer class="footer">
         Copyright &copy; 2020 Shen. All rights reserved
@@ -63,21 +52,24 @@
 </template>
 
 <script>
-import GameRule from "@/components/GameRule";
+import GameOptions from "@/components/GameOptions";
 import CallToAction from "@/components/CallToAction";
-import DeckOfCards from "@/components/DeckOfCards";
-import GamePlayer from "@/components/GamePlayer";
-import CardPool from "@/components/CardPool";
+import Deck from "@/components/Deck";
+import Player from "@/components/Player";
+import { gsap } from "gsap";
+import Desktop from "@/components/Desktop";
+
+import { eventBus } from "@/main";
 import sleep from "@/utils/sleep";
 
 export default {
   name: "App",
   components: {
-    GameRule,
+    GameOptions,
     CallToAction,
-    DeckOfCards,
-    GamePlayer,
-    CardPool
+    Deck,
+    Player,
+    Desktop
   },
   data() {
     return {
@@ -87,9 +79,8 @@ export default {
       currentRound: [],
       currentRoundPlayed: [],
       deck: [],
-      isAllCardDeal: false,
-      isGameStart: false,
-      isGameOver: false
+      isDeckEmpty: false,
+      isGameStart: false
     };
   },
   watch: {
@@ -123,6 +114,12 @@ export default {
         this.$set(this.deck, i, this.deck[randomIndex]);
         this.$set(this.deck, randomIndex, temp);
       }
+
+      // tell vue to update the dom after sort cards,
+      // so we can trigger the animation
+      this.$nextTick(() => {
+        this.updateAnimation();
+      });
     },
     async dealAllCards() {
       this.isGameStart = true;
@@ -136,7 +133,7 @@ export default {
           break;
         }
 
-        this.players[currentPlayerIndex].deck.push(this.deck.shift());
+        this.players[currentPlayerIndex].deck.push(this.deck.pop());
 
         currentPlayerIndex++;
 
@@ -148,15 +145,37 @@ export default {
       }
 
       // only empty the deck when game is start
-      // when user click reset reset button, the deck will empty by the restResult function.
-      // if empty deck early, the watch in deck will trigger the animate in GamePlayer,
+      // when user click reset button, the deck will empty by the restResult function.
+      // if empty deck early, the watch in deck will trigger the animate in Player,
       // this break the deal card function
       if (this.isGameStart) {
-        this.isAllCardDeal = true;
+        this.isDeckEmpty = true;
       }
     },
-    updateDeck(deck) {
-      this.deck = deck;
+    updateAnimation() {
+      const cards = document.querySelectorAll(".card-container");
+      cards.forEach((card, index) => {
+        gsap
+          .to(card, {
+            rotate: gsap.utils.random(-180, 180),
+            x: gsap.utils.random(-150, 150),
+            y: gsap.utils.random(-150, 150),
+            duration: 0.4,
+            ease: "power2.out"
+          })
+          .then(() => {
+            gsap.to(card, {
+              rotate: 0,
+              x: index * 0.2 * -1,
+              y: index * 0.3 * -1,
+              ease: "power2.out",
+              duration: 0.4
+            });
+          });
+      });
+    },
+    updateDeck(card) {
+      this.deck.push(card);
     },
     playCard(card) {
       this.currentRoundPlayed.push(card.player);
@@ -168,7 +187,7 @@ export default {
 
       this.$notify({
         title: `player ${this.currentRound[winnerIndex].player} win this round.`,
-        type: "success",
+        type: "warn",
         duration: 3000
       });
 
@@ -221,17 +240,20 @@ export default {
     },
     resetGame() {
       this.deck = [];
-      this.isGameOver = true;
       this.isGameStart = false;
-    },
-    reset() {
-      this.isAllCardDeal = false;
+
+      this.isDeckEmpty = false;
       this.playersCount = 1;
       this.players = [{ id: 0, deck: [] }];
       this.rounds = [];
       this.currentRound = [];
-      this.isGameOver = false;
+      this.currentRoundPlayed = [];
     }
+  },
+  created() {
+    eventBus.$on("resetGame", () => {
+      this.resetGame();
+    });
   }
 };
 </script>
@@ -252,31 +274,45 @@ html {
 }
 
 body {
-  background: rgb(24, 145, 98);
+  background: $color-green;
 }
 
 .notifications {
   padding: 1.5rem 3rem;
   margin: 0.5rem;
   text-align: center;
-  box-shadow: 0 0 0.6rem rgba(0, 0, 0, 0.3);
   color: #fff;
-  border-radius: 4px;
+  border: 1px solid #fff;
+  border-radius: 2px;
 
   .notification-title {
     text-align: center;
   }
 
-  &.success {
-    background: rgb(75, 187, 135);
+  &.warn {
+    background: $color-yellow;
+  }
+}
+
+.system-bar {
+  padding: 0.5rem 2rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  width: 100%;
+  z-index: 2;
+  position: fixed;
+
+  @include respond(tab-land) {
+    width: 100%;
   }
 }
 
 .container {
-  padding: 2rem 4rem;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 
   @include respond(tab-port) {
     padding: 2rem;
@@ -286,7 +322,19 @@ body {
 .card-dealer {
   margin: 0 auto;
   width: 25rem;
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  user-select: none;
 
+  @include respond(tab-land) {
+    top: 28%;
+  }
+
+  @include respond(phone) {
+    top: 30%;
+  }
   img {
     pointer-events: none;
     display: block;
@@ -295,55 +343,13 @@ body {
   }
 }
 
-.desktop {
-  padding: 0 2rem;
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-areas: "player0 player0 player0 player0";
-  align-items: center;
-  justify-items: center;
-  row-gap: 2rem;
-
-  @include respond(tab-port) {
-    padding: 0;
-  }
-
-  &.desktop--2 {
-    grid-template-areas: "player0 player0 player1 player1";
-  }
-
-  &.desktop--4 {
-    grid-template-areas:
-      "player0 player0 player1 player1"
-      "player2 player2 player3 player3";
-  }
-}
-
-.system {
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  width: 80%;
-
-  @include respond(tab-land) {
-    width: 100%;
-  }
-}
-
-.deck-container {
-  height: 10vh;
-  transform: translateY(-30%);
-
-  @include respond(tab-port) {
-    padding: 2rem 0;
-    min-height: 8rem;
-  }
-}
-
 .footer {
+  padding: 0.2rem 0;
   color: #fff;
   text-align: center;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>

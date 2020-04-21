@@ -1,28 +1,33 @@
 <template>
-  <div class="rule">
+  <div class="options">
     <label
-      class="rule__label"
+      class="options__label"
       v-for="i in playersChoice"
       :key="i"
-      :class="{ active: playersCount === i }"
+      :class="{
+        active: playersCount === i,
+        disabled: isGameStart && i !== playersCount
+      }"
       :style="{ pointerEvents: isGameStart ? 'none' : 'auto' }"
     >
       <input
-        class="rule__input"
+        class="options__input"
         type="radio"
         name="persons-radio"
         :value="i"
         v-model="playersCount"
       />
-      <span class="rule__text">{{ i }}人</span>
+      <span class="options__text">{{ i }}人</span>
     </label>
   </div>
 </template>
 
 <script>
+import { eventBus } from "@/main";
+
 export default {
-  name: "GameRule",
-  props: ["isGameStart", "isGameOver"],
+  name: "GameOptions",
+  props: ["isGameStart"],
   data() {
     return {
       playersChoice: [1, 2, 4],
@@ -32,30 +37,41 @@ export default {
   watch: {
     playersCount(count) {
       this.$emit("updatePlayersCount", count);
-    },
-    isGameOver(isGameOver) {
-      if (isGameOver) {
-        this.playersCount = 1;
-      }
     }
+  },
+  created() {
+    eventBus.$on("resetGame", () => {
+      this.playersCount = 1;
+    });
   }
 };
 </script>
 
 <style lang="scss">
-.rule {
+.options {
   display: flex;
   align-items: center;
 
   @include respond(tab-port) {
     flex: 0 0 100%;
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
     justify-content: center;
   }
 
   &__label {
     cursor: pointer;
-    margin-right: 1rem;
+    border: 1px solid #fff;
+    color: #fff;
+    outline: none;
+    background: none;
+
+    &:not(:last-of-type) {
+      margin-right: 1rem;
+    }
+  }
+
+  &__label:last-of-type {
+    margin-right: 0;
   }
 
   &__input {
@@ -63,14 +79,15 @@ export default {
   }
 
   &__text {
+    padding: 0.3em 1.5em;
+    font-size: 1rem;
     display: block;
-    padding: 0.5rem 1.55rem;
     color: #fff;
     user-select: none;
   }
 }
 
 .active {
-  background: rgb(218, 191, 41);
+  background: $color-yellow;
 }
 </style>

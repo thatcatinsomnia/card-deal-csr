@@ -1,20 +1,20 @@
 <template>
-  <div class="card-pool">
+  <div class="desktop">
     <transition-group
-      class="card-pool__inner"
-      :class="'card-pool__inner--' + playersCount"
+      class="desktop__inner"
+      :class="'desktop__inner--' + playersCount"
       @enter="enter"
       @leave="leave"
       tag="div"
     >
       <div
-        class="card__outer"
+        class="desktop__cards"
         v-for="(round, index) in currentRound"
-        :data-index="index"
+        :data-order="index"
         :key="round.player + '-' + round.suit + round.number"
       >
         <Card :card="round" :isStack="false"></Card>
-        <span class="card-pool__owner">player {{ round.player }}</span>
+        <span class="desktop__owner">player {{ round.player }}</span>
       </div>
     </transition-group>
   </div>
@@ -31,8 +31,7 @@ export default {
   data() {
     return {
       cardOwner: null,
-      positionX: 0,
-      positionY: 0
+      pos: {}
     };
   },
   components: {
@@ -40,21 +39,35 @@ export default {
   },
   methods: {
     enter(el) {
+      // hide the span until card is on the desktop
+      const span = el.children[1];
+      span.style.opacity = 0;
+
+      // card element, remove the start class to prevent hover effect
+      el.children[0].children[0].classList.remove("start");
+
       const { left, top } = el.getBoundingClientRect();
+
       gsap.from(el, {
-        x: this.positionX - left,
-        y: this.positionY - top,
-        duration: 0.3
+        x: this.pos.x - left,
+        y: this.pos.y - top,
+        duration: 0.3,
+        onComplete: () => {
+          span.style.opacity = 1;
+        }
       });
     },
     leave(el, done) {
+      const span = el.children[1];
+      span.style.opacity = 0;
+
       gsap.to(el, {
-        y: 400,
-        rotate: gsap.utils.random(-90, 90),
+        y: 350,
+        rotate: gsap.utils.random(-180, 180),
         // how many time delay, decrease it to make all card disappear in the same time.
-        duration: 1 - el.dataset.index * 0.1,
+        duration: 1 - el.dataset.order * 0.1,
         opacity: 0,
-        delay: el.dataset.index * 0.1,
+        delay: el.dataset.order * 0.1,
         onComplete: () => {
           done();
         }
@@ -64,26 +77,28 @@ export default {
   created() {
     // listen eventBus for animation from user hand to card pool
     eventBus.$on("cardLocationFromPlayer", coordinate => {
-      this.positionX = coordinate.x;
-      this.positionY = coordinate.y;
+      this.pos.x = coordinate.x;
+      this.pos.y = coordinate.y;
     });
   }
 };
 </script>
 
 <style lang="scss">
-.card-pool {
+.desktop {
   position: absolute;
-  top: 0;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, 0);
-  margin: 0 auto;
-  height: 100%;
+  height: 10rem;
   width: 30rem;
+  pointer-events: none;
 
   &__inner {
+    width: 100%;
+    height: 100%;
     display: grid;
-    gap: 4rem;
+    gap: 1rem;
     grid-template-columns: repeat(1, 1fr);
     justify-items: center;
 
@@ -96,11 +111,17 @@ export default {
     }
   }
 
+  &__cards {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+
   &__owner {
     display: block;
     text-align: center;
     font-size: 1.2rem;
-    color: rgb(204, 185, 14);
+    color: #fff;
   }
 }
 </style>

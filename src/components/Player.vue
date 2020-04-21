@@ -1,20 +1,29 @@
 <template>
   <div class="player" :class="'player--' + id">
     <div class="player__header">
-      <span class="player__name">player {{ id }}</span>
-      <button
-        class="player__view"
-        @click="toggleView"
-        v-if="this.showBackSide === true"
-      >
-        <img :src="require('@/assets/icons/icon-view-hide.svg')" />
-      </button>
-      <button class="player__view" @click="toggleView" v-else>
-        <img :src="require('@/assets/icons/icon-view-show.svg')" />
-      </button>
+      <div class="player__info">
+        <img
+          :src="require('@/assets/images/user.png')"
+          alt=""
+          class="player__logo"
+        />
+        <span class="player__name">player {{ id }}</span>
+      </div>
+      <div class="player__action">
+        <button
+          class="player__view"
+          @click="toggleView"
+          v-if="this.showBackface === true"
+        >
+          <img :src="require('@/assets/icons/icon-view-hide.svg')" />
+        </button>
+        <button class="player__view" @click="toggleView" v-else>
+          <img :src="require('@/assets/icons/icon-view-show.svg')" />
+        </button>
+      </div>
     </div>
     <div class="player__cards">
-      <transition-group @enter="enter">
+      <transition-group @enter="enter" tag="div">
         <!-- 
           isStack used to set the card position stack to each other
           showBackSide will set the card backside until card is deal to player's hand
@@ -25,8 +34,9 @@
           :key="'player-' + card.suit + card.number"
           :card="card"
           :isStack="true"
-          :showBackSide="showBackSide"
+          :showBackface="showBackface"
           :data-owner="id"
+          :data-card="card.suit + ' ' + card.number"
           @playCard="playCard"
         >
         </Card>
@@ -38,29 +48,29 @@
 <script>
 import { eventBus } from "@/main";
 import Card from "@/components/Card";
-import { gsap, Power4 } from "gsap";
+import { gsap } from "gsap";
 import "@/assets/icons/icon-view-hide.svg";
 import "@/assets/icons/icon-view-show.svg";
 
 export default {
-  name: "GamePlayer",
-  props: ["playerDeck", "id", "isAllCardDeal", "currentRoundPlayed"],
+  name: "Player",
+  props: ["playerDeck", "id", "isDeckEmpty", "currentRoundPlayed"],
   components: {
     Card
   },
   data() {
     return {
       deck: [],
-      showBackSide: true,
-      positionX: 0,
-      positionY: 0
+      showBackface: true,
+      isAllCardsDeal: false,
+      pos: {}
     };
   },
   watch: {
     playerDeck(newDeck) {
       this.deck = newDeck;
     },
-    isAllCardDeal() {
+    isDeckEmpty() {
       // animation when all card is deal
       // SET DELAY PROPERTY LARGE OR EQUAL TO DEALING CARD ANIMATION TIME
       // OTHERWISE THE ANIMATION WILL STUCK
@@ -73,45 +83,46 @@ export default {
             x: 0,
             y: 0,
             duration: 0.2,
-            delay: 0.5,
-            clearProps: "transform,left"
+            delay: 0.6,
+            clearProps: "left"
+          })
+          .then(() => {
+            this.sortHandCards();
           })
           .then(() => {
             gsap.from(card.$el, {
               left: 0,
               duration: 0.3,
-              onComplete: () => {
-                card.$el.children[0].classList.add("card-start");
-              }
+              clearProps: "transform"
             });
           });
       });
-      this.sortHandCards();
     }
   },
   methods: {
     toggleView() {
-      this.showBackSide = !this.showBackSide;
+      this.showBackface = !this.showBackface;
     },
     enter(el) {
       let { left, top } = el.getBoundingClientRect();
-      let translateX = left - this.x;
-      let translateY = top - this.y;
+      let translateX = left - this.pos.x;
+      let translateY = top - this.pos.y;
 
-      var timeline = gsap.timeline();
-      timeline
-        .fromTo(
-          el,
-          { x: -translateX, y: -translateY, ease: Power4.easeOut },
-          { x: 0, y: 0, left: 0, duration: 0.4 }
-        )
-        .to(el, {
-          rotation: gsap.utils.random(-90, 90),
+      gsap.fromTo(
+        el,
+        {
+          x: -translateX,
+          y: -translateY
+        },
+        {
           x: gsap.utils.random(1, 30),
           y: gsap.utils.random(1, 30),
-          duration: 0.15,
-          delay: -0.1
-        });
+          rotation: gsap.utils.random(-90, 90),
+          left: 0,
+          duration: 0.8,
+          ease: "power3.out"
+        }
+      );
     },
     sortHandCards() {
       //for transform suit to point
@@ -147,7 +158,7 @@ export default {
         return;
       }
 
-      this.showBackSide = true;
+      this.showBackface = true;
 
       this.playerDeck.forEach((playerCard, index) => {
         if (
@@ -169,8 +180,8 @@ export default {
   created() {
     // listen eventBus for animation deal card from deck to user hand
     eventBus.$on("cardLocationFromDeck", coordinate => {
-      this.x = coordinate.x;
-      this.y = coordinate.y;
+      this.pos.x = coordinate.x;
+      this.pos.y = coordinate.y;
     });
   },
   mounted() {
@@ -181,27 +192,44 @@ export default {
 
 <style lang="scss">
 .player {
-  max-width: 30rem;
-  width: 100%;
-  height: 10rem;
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  position: absolute;
 
   &.player--0 {
-    grid-area: player0;
+    top: 25%;
+    left: 15%;
+
+    @include respond(tab-land) {
+      top: 10%;
+      left: 5%;
+    }
   }
 
   &.player--1 {
-    grid-area: player1;
+    top: 65%;
+    left: 15%;
+
+    @include respond(tab-land) {
+      bottom: 85%;
+      left: 5%;
+    }
   }
 
   &.player--2 {
-    grid-area: player2;
+    top: 25%;
+    right: 20%;
+
+    @include respond(tab-land) {
+      top: 10%;
+    }
   }
 
   &.player--3 {
-    grid-area: player3;
+    top: 65%;
+    right: 20%;
+
+    @include respond(tab-land) {
+      bottom: 85%;
+    }
   }
 
   &__header {
@@ -209,10 +237,26 @@ export default {
     align-items: center;
   }
 
+  &__info {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+
+  &__logo {
+    width: 4rem;
+    height: 4rem;
+  }
+
   &__name {
     font-size: 1.2rem;
     margin: 0 1rem;
-    color: rgb(218, 191, 41);
+    color: #fff;
+  }
+
+  &__action {
+    align-self: flex-end;
   }
 
   &__view {
@@ -225,6 +269,8 @@ export default {
     cursor: pointer;
 
     img {
+      width: 1.5rem;
+      height: 1.5rem;
       pointer-events: none;
     }
   }

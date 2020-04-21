@@ -6,21 +6,13 @@
       position: isStack ? 'absolute' : 'initial'
     }"
   >
-    <div class="card" :class="showBackSide ? 'showBackSide' : 'card-start'">
+    <div class="card" :class="showBackface ? 'showBackface' : 'start'">
       <div class="card__front">
-        <img
-          :src="
-            require(`@/assets/images/${card.suit}/${card.suit}_${card.number}.png`)
-          "
-          :alt="card.suit + ' ' + card.number"
-        />
+        <img :src="src" :alt="card.suit + ' ' + card.number" />
       </div>
 
       <div class="card__back">
-        <img
-          :src="require(`@/assets/images/${cardBackImage.maroon}`)"
-          alt="card back side image"
-        />
+        <img :src="backfaceSrc" alt="card back side image" />
       </div>
     </div>
   </div>
@@ -30,7 +22,7 @@
 import { eventBus } from "@/main";
 export default {
   name: "Card",
-  props: ["card", "isStack", "showBackSide"],
+  props: ["card", "isStack", "showBackface"],
   data() {
     return {
       cardBackImage: {
@@ -39,23 +31,23 @@ export default {
         maroon: "back-maroon.png",
         gray: "back-gray.png",
         teal: "back-teal.png"
-      }
+      },
+      src: "",
+      backfaceSrc: ""
     };
   },
   methods: {
     playCard(event) {
-      // console.log("play card");
-      // check if card contains class: "card-start"
-      // card-start class means all card is deal to player's hand
+      // check if card contains class: "start"
+      // start class means all card is deal to player's hand
       const card = event.target.closest(".card");
 
-      if (card && card.classList.contains("showBackSide")) {
+      if (card && card.classList.contains("showBackface")) {
         return;
       }
 
-      if (card && card.classList.contains("card-start")) {
+      if (card && card.classList.contains("start")) {
         const { left, top } = card.getBoundingClientRect();
-
         this.$emit("playCard", {
           suit: this.card.suit,
           number: this.card.number,
@@ -64,6 +56,10 @@ export default {
         eventBus.$emit("cardLocationFromPlayer", { x: left, y: top });
       }
     }
+  },
+  mounted() {
+    this.backfaceSrc = require(`@/assets/images/back-maroon.png`);
+    this.src = require(`@/assets/images/${this.card.suit}/${this.card.suit}_${this.card.number}.png`);
   }
 };
 </script>
@@ -72,40 +68,40 @@ export default {
 .card-container {
   display: inline-block;
   width: 5rem;
-  height: 7.5rem;
+  height: 7rem;
   perspective: 50rem;
   position: absolute;
-  z-index: 10;
+  user-select: none;
 
-  &:hover .card.card-start,
-  &:active .card.card-start {
-    transition: transform 0.08s cubic-bezier(0, 0, 0.3, 1);
+  &.initial {
+    transform: translate(-50%, -50%);
+  }
+
+  &:hover .card.start,
+  &:active .card.start {
+    transition: transform 0.05s cubic-bezier(0, 0, 0.3, 1);
     transform: translateY(-1rem);
   }
 
-  .card.showBackSide {
+  .card.showBackface {
     transform: rotateY(180deg);
   }
 
-  &:hover .card.showBackSide,
-  &:active .card.showBackSide {
+  &:hover .card.showBackface,
+  &:active .card.showBackface {
     transform: rotateY(180deg);
   }
 
+  @include respond(phone) {
+    width: 4rem;
+    height: 5.5rem;
+  }
+}
+
+.player__cards .card-container {
   @for $i from 1 to 53 {
     &:nth-of-type(#{$i}) {
-      left: (#{($i - 1) * 0.8rem});
-    }
-  }
-
-  @include respond(tab-port) {
-    width: 3.5rem;
-    height: 5.5rem;
-
-    @for $i from 1 to 53 {
-      &:nth-of-type(#{$i}) {
-        left: (#{($i - 1) * 0.5rem});
-      }
+      left: (#{($i - 1) * 1rem});
     }
   }
 }
@@ -116,9 +112,11 @@ export default {
   transform-style: preserve-3d;
   position: relative;
   transition: all 0.3s cubic-bezier(0, 0, 0.3, 1);
+  background: #fff;
 
   &__front {
-    height: 100%;
+    border-radius: 4px;
+    height: auto;
     width: 100%;
     backface-visibility: hidden;
     position: absolute;
@@ -126,8 +124,7 @@ export default {
   }
 
   &__back {
-    height: 100%;
-    width: 100%;
+    border-radius: 4px;
     backface-visibility: hidden;
     position: absolute;
     top: 0;
